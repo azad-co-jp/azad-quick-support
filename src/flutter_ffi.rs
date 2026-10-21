@@ -2476,6 +2476,10 @@ pub fn is_custom_client() -> SyncReturn<bool> {
     SyncReturn(crate::common::is_custom_client())
 }
 
+pub fn is_quick_support() -> SyncReturn<bool> {
+    SyncReturn(crate::portable_service::client::is_quick_support())
+}
+
 pub fn is_disable_settings() -> SyncReturn<bool> {
     SyncReturn(config::is_disable_settings())
 }

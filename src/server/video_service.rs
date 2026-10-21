@@ -721,8 +721,10 @@ fn run(vs: VideoService) -> ResultType<()> {
 
         let time = now - start;
         let ms = (time.as_secs() * 1000 + time.subsec_millis() as u64) as i64;
+        log::info!("VIDEO FRAME BEFORE_C_FRAME");
         let res = match c.frame(spf) {
             Ok(frame) => {
+                log::info!("VIDEO FRAME CAPTURED: valid={}", frame.valid());
                 repeat_encode_counter = 0;
                 if frame.valid() {
                     let screenshot_key = (vs.source, display_idx);
@@ -850,6 +852,7 @@ fn run(vs: VideoService) -> ResultType<()> {
                 }
             }
             Err(err) => {
+                log::error!("VIDEO FRAME ERROR: {:?}", err);
                 // This check may be redundant, but it is better to be safe.
                 // The previous check in `sp.is_option_true(OPTION_REFRESH)` block may be enough.
                 if vs.source.is_monitor() {
@@ -1146,6 +1149,7 @@ fn handle_one_frame(
     width: usize,
     height: usize,
 ) -> ResultType<HashSet<i32>> {
+    log::info!("VIDEO HANDLE_ONE_FRAME: display={}, width={}, height={}, ms={}", display, width, height, ms);
     sp.snapshot(|sps| {
         // so that new sub and old sub share the same encoder after switch
         if sps.has_subscribes() {

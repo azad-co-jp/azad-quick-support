@@ -59,6 +59,13 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+
+    if (bind.isQuickSupport()) {
+      return _buildBlock(
+        child: buildAzadQuickSupport(context),
+      );
+    }
+
     final isIncomingOnly = bind.isIncomingOnly();
     return _buildBlock(
         child: Row(
@@ -71,6 +78,154 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     ));
   }
 
+  Widget buildAzadQuickSupport(BuildContext context) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(32),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Card(
+            elevation: 3,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 40,
+                vertical: 36,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    "assets/logo_azad_script.png",
+                    width: 180,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "AZAD QUICK SUPPORT",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    "\u30ea\u30e2\u30fc\u30c8\u30b5\u30dd\u30fc\u30c8\u3092\u3054\u5229\u7528\u306e\u65b9\u3078",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "\u4ee5\u4e0b\u306eID\u3092\u30b5\u30dd\u30fc\u30c8\u62c5\u5f53\u8005\u306b\u304a\u4f1d\u3048\u304f\u3060\u3055\u3044\u3002",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  const Text(
+                    "Your ID",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  FutureBuilder<String>(
+                    future: bind.mainGetMyId(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+
+                      final id = snapshot.data ?? "";
+
+                      void copyId() {
+                        if (id.isEmpty) return;
+
+                        Clipboard.setData(
+                          ClipboardData(text: id),
+                        );
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("ID copied"),
+                            duration: Duration(seconds: 1),
+                          ),
+                        );
+                      }
+
+                      return Column(
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 14,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .outline,
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Flexible(
+                                  child: SelectableText(
+                                    id,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 2,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  tooltip: "Copy ID",
+                                  icon: const Icon(Icons.copy),
+                                  onPressed: id.isEmpty ? null : copyId,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              onPressed: id.isEmpty ? null : copyId,
+                              icon: const Icon(Icons.copy),
+                              label: const Text(
+                                "ID\u3092\u30b3\u30d4\u30fc\u3059\u308b",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
   Widget _buildBlock({required Widget child}) {
     return buildRemoteBlock(
         block: _block, mask: true, use: canBeBlocked, child: child);

@@ -273,16 +273,12 @@ async fn start_hbbs_sync_async() {
     }
 }
 
+
+
 fn heartbeat_url() -> String {
-    let url = crate::common::get_api_server(
-        Config::get_option("api-server"),
-        Config::get_option("custom-rendezvous-server"),
-    );
-    if url.is_empty() || crate::is_public(&url) {
-        return "".to_owned();
-    }
-    format!("{}/api/heartbeat", url)
+    "".to_owned()
 }
+
 
 fn handle_config_options(config_options: HashMap<String, String>) {
     let mut options = Config::get_options();

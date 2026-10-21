@@ -241,8 +241,11 @@ mod win {
     /// Check if the executable is a Quick Support version.
     /// Note: This function must be kept in sync with `src/core_main.rs`.
     #[inline]
-    pub(super) fn is_quick_support_exe(exe: &str) -> bool {
-        let exe = exe.to_lowercase();
-        exe.contains("-qs-") || exe.contains("-qs.exe") || exe.contains("_qs.exe")
+   pub(super) fn is_quick_support_exe(exe: &str) -> bool {
+    let exe = exe.to_lowercase();
+    exe.contains("-qs-")
+        || exe.contains("-qs.exe")
+        || exe.contains("_qs.exe")
+        || exe.ends_with("azad_quick_support.exe")
     }
 }

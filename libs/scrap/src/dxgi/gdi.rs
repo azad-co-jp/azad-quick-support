@@ -1,3 +1,4 @@
+use hbb_common::log;
 use std::mem::size_of;
 use winapi::{
     shared::windef::{HBITMAP, HDC},
@@ -89,6 +90,7 @@ impl CapturerGDI {
 
     pub fn frame(&self, data: &mut Vec<u8>) -> Result<(), Box<dyn std::error::Error>> {
         unsafe {
+            log::info!("GDI FRAME BEFORE_BITBLT");
             let res = BitBlt(
                 self.dc,
                 0,
@@ -100,6 +102,8 @@ impl CapturerGDI {
                 0,
                 SRCCOPY | CAPTUREBLT, // CAPTUREBLT enable layered window but also make cursor blinking
             );
+            log::info!("GDI FRAME AFTER_BITBLT res={}", res);
+
             if res == 0 {
                 return Err("Failed to copy screen to Windows buffer".into());
             }
@@ -133,6 +137,7 @@ impl CapturerGDI {
             };
 
             // copy bits into Vec
+            log::info!("GDI FRAME BEFORE_GETDIBITS");
             let res = GetDIBits(
                 self.dc,
                 self.bmp,
@@ -142,6 +147,8 @@ impl CapturerGDI {
                 &mut bmi as _,
                 DIB_RGB_COLORS,
             );
+            log::info!("GDI FRAME AFTER_GETDIBITS res={}", res);
+
             if res == 0 {
                 return Err("GetDIBits failed".into());
             }

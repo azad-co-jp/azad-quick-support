@@ -156,10 +156,14 @@ void runMainApp(bool startService) async {
 
   // Set window option.
   WindowOptions windowOptions = getHiddenTitleBarWindowOptions(
-      isMainWindow: true, alwaysOnTop: alwaysOnTop);
+      isMainWindow: true,
+      alwaysOnTop: alwaysOnTop,
+      size: bind.isIncomingOnly() ? const Size(500, 550) : null);
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     // Restore the location of the main window before window hide or show.
-    await restoreWindowPosition(WindowType.Main);
+    if (!bind.isIncomingOnly()) {
+      await restoreWindowPosition(WindowType.Main);
+    }
     // Check the startup argument, if we successfully handle the argument, we keep the main window hidden.
     final handledByUniLinks = await initUniLinks();
     debugPrint("handled by uni links: $handledByUniLinks");
@@ -310,7 +314,7 @@ bool _isCmReadyToShow = false;
 
 showCmWindow({bool isStartup = false}) async {
   if (isStartup) {
-    WindowOptions windowOptions = getHiddenTitleBarWindowOptions(
+  WindowOptions windowOptions = getHiddenTitleBarWindowOptions(
         size: kConnectionManagerWindowSizeClosedChat, alwaysOnTop: true);
     await windowManager.waitUntilReadyToShow(windowOptions, null);
     bind.mainHideDock();
@@ -337,7 +341,7 @@ showCmWindow({bool isStartup = false}) async {
 
 hideCmWindow({bool isStartup = false}) async {
   if (isStartup) {
-    WindowOptions windowOptions = getHiddenTitleBarWindowOptions(
+  WindowOptions windowOptions = getHiddenTitleBarWindowOptions(
         size: kConnectionManagerWindowSizeClosedChat);
     windowManager.setOpacity(0);
     await windowManager.waitUntilReadyToShow(windowOptions, null);
@@ -601,3 +605,17 @@ Widget keyListenerBuilder(BuildContext context, Widget? child) {
     },
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

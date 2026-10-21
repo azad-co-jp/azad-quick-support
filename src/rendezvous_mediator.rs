@@ -1,4 +1,4 @@
-use std::{
+﻿use std::{
     net::SocketAddr,
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -375,7 +375,7 @@ impl RendezvousMediator {
                         notify_android_needs_deploy();
                     }
                     _ => {
-                        log::error!("unknown RegisterPkResponse");
+                        log::error!("unknown RegisterPkResponse: raw_result={}", rpr.result.value());
                     }
                 }
                 if rpr.keep_alive > 0 {
@@ -466,12 +466,7 @@ impl RendezvousMediator {
                     if last_recv_msg.elapsed().as_millis() as u64 > rz.keep_alive as u64 * 3 / 2 {
                         bail!("Rendezvous connection is timeout");
                     }
-                    if (!Config::get_key_confirmed() ||
-                        !Config::get_host_key_confirmed(&rz.host_prefix)) &&
-                        last_register_sent.map(|x| x.elapsed().as_millis() as i64).unwrap_or(REG_INTERVAL) >= REG_INTERVAL {
-                        rz.register_pk(Sink::Stream(&mut conn)).await?;
-                        last_register_sent = Some(Instant::now());
-                    }
+
                 }
             }
         }
@@ -822,15 +817,12 @@ impl RendezvousMediator {
         Ok(())
     }
 
-    fn get_relay_server(&self, provided_by_rendezvous_server: String) -> String {
-        let mut relay_server = Config::get_option("relay-server");
-        if relay_server.is_empty() {
-            relay_server = provided_by_rendezvous_server;
+    fn get_relay_server(&self, _provided_by_rendezvous_server: String) -> String {
+        if crate::server::portable_service::client::is_quick_support() {
+            "ik1-215-78051.vs.sakura.ne.jp".to_owned()
+        } else {
+            "153.120.40.55".to_owned()
         }
-        if relay_server.is_empty() {
-            relay_server = crate::increase_port(&self.host, 1);
-        }
-        relay_server
     }
 }
 
@@ -1000,3 +992,8 @@ impl Drop for CheckIfResendPk {
         }
     }
 }
+
+
+
+
+

@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -2059,8 +2059,7 @@ Future<bool> restoreWindowPosition(WindowType type,
     isRemotePeerPos = pos != null;
   }
   pos ??= bind.getLocalFlutterOption(k: windowFramePrefix + type.name);
-
-  var lpos = LastWindowPosition.loadFromString(pos);
+    var lpos = LastWindowPosition.loadFromString(pos);
   if (lpos == null) {
     debugPrint("No window position saved, trying to center the window.");
     switch (type) {
@@ -3838,12 +3837,9 @@ Widget loadIcon(double size) {
           ));
 }
 
-var imcomingOnlyHomeSize = Size(280, 300);
+var imcomingOnlyHomeSize = Size(500, 550);
 Size getIncomingOnlyHomeSize() {
-  final magicWidth = isWindows ? 11.0 : 2.0;
-  final magicHeight = 10.0;
-  return imcomingOnlyHomeSize +
-      Offset(magicWidth, kDesktopRemoteTabBarHeight + magicHeight);
+  return imcomingOnlyHomeSize;
 }
 
 Size getIncomingOnlySettingsSize() {
@@ -4286,3 +4282,12 @@ Widget? buildAvatarWidget({
     ),
   );
 }
+
+
+
+
+
+
+
+
+

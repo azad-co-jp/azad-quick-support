@@ -1318,9 +1318,11 @@ impl<T: InvokeUiSession> Remote<T> {
     }
 
     async fn handle_msg_from_peer(&mut self, data: &[u8], peer: &mut Stream) -> bool {
+        log::info!("PEER DATA RECEIVED: {} bytes", data.len());
         if let Ok(msg_in) = Message::parse_from_bytes(&data) {
             match msg_in.union {
                 Some(message::Union::VideoFrame(vf)) => {
+                    log::info!("VIDEO FRAME RECEIVED: display={}, key_frame={}, first_frame={}", vf.display, Self::contains_key_frame(&vf), self.first_frame);
                     if !self.first_frame {
                         self.first_frame = true;
                         self.handler.close_success();
