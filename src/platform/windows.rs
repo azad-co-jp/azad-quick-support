@@ -1,4 +1,4 @@
-﻿use super::{CursorData, ResultType};
+use super::{CursorData, ResultType};
 use crate::{
     common::PORTABLE_APPNAME_RUNTIME_ENV_KEY,
     custom_server::*,
@@ -2421,17 +2421,10 @@ pub fn elevate(arg: &str) -> ResultType<bool> {
 
 pub fn run_as_system(arg: &str) -> ResultType<()> {
     let exe = std::env::current_exe()?.to_string_lossy().to_string();
-    log::info!("AZAD DEBUG: run_as_system ENTER exe={} arg={}", exe, arg);
-    match impersonate_system::run_as_system(&exe, arg) {
-        Ok(()) => {
-            log::info!("AZAD DEBUG: impersonate_system::run_as_system OK");
-            Ok(())
-        }
-        Err(()) => {
-            log::error!("AZAD DEBUG: impersonate_system::run_as_system FAILED");
-            bail!(format!("Failed to run {} as system", exe));
-        }
+    if impersonate_system::run_as_system(&exe, arg).is_err() {
+        bail!(format!("Failed to run {} as system", exe));
     }
+    Ok(())
 }
 
 pub fn elevate_or_run_as_system(is_setup: bool, is_elevate: bool, is_run_as_system: bool) {
@@ -2470,13 +2463,6 @@ pub fn elevate_or_run_as_system(is_setup: bool, is_elevate: bool, is_run_as_syst
         arg_run_as_system.push(' ');
         arg_run_as_system.push_str(&shmem_arg);
     }
-    let azad_is_root = is_root();
-    log::info!(
-        "AZAD DEBUG: portable-service is_root={} is_run_as_system={} is_elevated={:?}",
-        azad_is_root,
-        is_run_as_system,
-        is_elevated(None)
-    );
     if is_root() {
         if is_run_as_system {
             log::info!("run portable service");
@@ -4709,7 +4695,3 @@ ProcessId=10136
         assert_eq!(pids.len(), 0);
     }
 }
-
-
-
-

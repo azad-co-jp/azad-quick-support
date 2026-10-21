@@ -1,4 +1,3 @@
-use hbb_common::log;
 use std::{io, mem, ptr, slice};
 pub mod gdi;
 pub use gdi::CapturerGDI;
@@ -412,7 +411,6 @@ impl Capturer {
             // None of the errors crash anyway.
             let result = {
                 if let Some(gdi_capturer) = &self.gdi_capturer {
-                    log::info!("SCRAP GDI PATH ENTER");
                     match gdi_capturer.frame(&mut self.gdi_buffer) {
                         Ok(_) => {
                             crate::would_block_if_equal(

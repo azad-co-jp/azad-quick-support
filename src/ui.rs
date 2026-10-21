@@ -74,9 +74,9 @@ pub fn start(args: &mut [String]) {
     // https://github.com/c-smile/sciter-sdk/blob/master/include/sciter-x-types.h
     // https://github.com/rustdesk/rustdesk/issues/132#issuecomment-886069737
     #[cfg(windows)]
-    // allow_err!(sciter::set_options(sciter::RuntimeOptions::GfxLayer(
-    // sciter::GFX_LAYER::WARP
-    // )));
+    allow_err!(sciter::set_options(sciter::RuntimeOptions::GfxLayer(
+        sciter::GFX_LAYER::WARP
+    )));
     use sciter::SCRIPT_RUNTIME_FEATURES::*;
     allow_err!(sciter::set_options(sciter::RuntimeOptions::ScriptFeatures(
         ALLOW_FILE_IO as u8 | ALLOW_SOCKET_IO as u8 | ALLOW_EVAL as u8 | ALLOW_SYSINFO as u8

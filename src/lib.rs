@@ -39,6 +39,7 @@ use common::*;
 mod auth_2fa;
 #[cfg(not(target_os = "ios"))]
 mod clipboard;
+pub mod azad;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod core_main;
 mod custom_server;

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_hbb/common.dart';
 import 'package:flutter_hbb/consts.dart';
 import 'package:flutter_hbb/desktop/pages/desktop_home_page.dart';
@@ -54,7 +54,6 @@ class _DesktopTabPageState extends State<DesktopTabPage> {
         )));
     if (bind.isIncomingOnly()) {
       tabController.onSelected = (key) {
-        debugPrint('[AZAD] DesktopTabPage onSelected key=$key');
         if (key == kTabLabelHomePage) {
           windowManager.setSize(getIncomingOnlyHomeSize());
           setResizable(false);
@@ -118,5 +117,3 @@ class _DesktopTabPageState extends State<DesktopTabPage> {
           );
   }
 }
-
-

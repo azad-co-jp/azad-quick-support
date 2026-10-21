@@ -1,4 +1,4 @@
-﻿use crate::{
+use crate::{
     ipc::{self, new_listener, Connection, Data, DataPortableService, IPC_TOKEN_LEN},
     platform::{
         set_path_permission, set_path_permission_for_portable_service_shmem_dir,
@@ -447,7 +447,6 @@ pub mod server {
     }
 
     pub fn run_portable_service() {
-        log::info!("AZAD DEBUG: ENTER run_portable_service");
         let shmem_name = match portable_service_shmem_name_from_args() {
             Some(name) => name,
             None => {
@@ -486,20 +485,12 @@ pub mod server {
         let shmem1 = shmem.clone();
         let shmem2 = shmem.clone();
         let mut threads = vec![];
-
-        log::info!("PORTABLE RUN_CAPTURE SPAWN BEFORE");
         threads.push(std::thread::spawn(|| {
-            log::info!("PORTABLE RUN_CAPTURE THREAD START");
             run_get_cursor_info(shmem1);
         }));
-        log::info!("PORTABLE RUN_CAPTURE SPAWN AFTER");
-
-        log::info!("PORTABLE CAPTURE THREAD SPAWN BEFORE");
         threads.push(std::thread::spawn(|| {
-            log::info!("PORTABLE CAPTURE THREAD START");
             run_capture(shmem2);
         }));
-        log::info!("PORTABLE CAPTURE THREAD SPAWN AFTER");
         threads.push(std::thread::spawn(move || {
             run_ipc_client(ipc_token);
         }));
@@ -588,7 +579,6 @@ pub mod server {
     }
 
     fn run_capture(shmem: Arc<SharedMemory>) {
-        log::info!("PORTABLE RUN_CAPTURE ENTER");
         let mut c = None;
         let mut last_current_display = usize::MAX;
         let mut last_timeout_ms: i32 = 33;
@@ -623,7 +613,6 @@ pub mod server {
                     display_height = display.height();
                     match Capturer::new(display) {
                         Ok(mut v) => {
-                            log::info!("PORTABLE CAPTURE CREATED: is_gdi={}", v.is_gdi());
                             c = {
                                 last_current_display = current_display;
                                 first_frame_captured = false;
@@ -672,8 +661,6 @@ pub mod server {
                         continue;
                     }
                 }
-                log::info!("PORTABLE CAPTURE BEFORE_FRAME: is_gdi={}", c.as_ref().map(|f| f.is_gdi()).unwrap_or(false));
-
                 match c.as_mut().map(|f| f.frame(spf)) {
                     Some(Ok(f)) => match f {
                         Frame::PixelBuffer(f) => {
@@ -707,8 +694,6 @@ pub mod server {
                         }
                     },
                     Some(Err(e)) => {
-
-                        log::info!("PORTABLE CAPTURE FRAME_ERR: kind={:?} error={}", e.kind(), e);
                         if crate::platform::windows::desktop_changed() {
                             crate::platform::try_change_desktop();
                             c = None;
@@ -1533,7 +1518,9 @@ pub mod client {
         display: scrap::Display,
         _portable_service_running: bool,
     ) -> ResultType<Box<dyn TraitCapturer>> {
-        log::info!("Create direct capturer dxgi|gdi");
+        // AZAD: ポータブルサービス（SYSTEM）経由の共有メモリでの取り込みでは映像が出なかったため、
+        // 直接取り込む。UACの確認画面など、管理者の画面は映らない可能性がある（要確認）。
+        log::debug!("Create capturer dxgi|gdi");
         Ok(Box::new(
             Capturer::new(display).with_context(|| "Failed to create capturer")?,
         ))
@@ -1621,7 +1608,3 @@ mod tests {
         assert!(is_valid_capture_frame_length(ADDR_CAPTURE_FRAME + 16, 16));
     }
 }
-
-
-
-

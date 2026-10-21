@@ -1,4 +1,4 @@
-﻿#[cfg(any(target_os = "windows", target_os = "macos"))]
+#[cfg(any(target_os = "windows", target_os = "macos"))]
 use crate::client::translate;
 #[cfg(not(debug_assertions))]
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -29,6 +29,11 @@ macro_rules! my_println{
 /// If it returns [`Some`], then the process will continue, and flutter gui will be started.
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub fn core_main() -> Option<Vec<String>> {
+    // AZAD: 設定を読む前に、設定フォルダーと IPC の名前を AZAD 用にする
+    let is_azad = crate::azad::is_azad_exe();
+    if is_azad {
+        crate::azad::init();
+    }
     if !crate::common::global_init() {
         return None;
     }
@@ -48,7 +53,6 @@ pub fn core_main() -> Option<Vec<String>> {
     let mut no_server = false;
     let mut arg_exe = Default::default();
     for arg in std::env::args() {
-        log::info!("AZAD DEBUG: core_main arg={:?}", arg);
         if i == 0 {
             arg_exe = arg;
         } else if i > 0 {
@@ -79,13 +83,6 @@ pub fn core_main() -> Option<Vec<String>> {
             }
         }
         i += 1;
-    log::info!(
-        "AZAD DEBUG: core_main parsed is_elevate={} is_run_as_system={} is_quick_support={} args={:?}",
-        _is_elevate,
-        _is_run_as_system,
-        _is_quick_support,
-        args
-    );
     }
     #[cfg(any(target_os = "linux", target_os = "windows"))]
     if args.is_empty() {
@@ -146,30 +143,15 @@ pub fn core_main() -> Option<Vec<String>> {
     }
     #[cfg(windows)]
     {
-        _is_quick_support |= args.is_empty()
+        _is_quick_support |= !crate::platform::is_installed()
+            && args.is_empty()
             && (is_quick_support_exe(&arg_exe)
-                || (!crate::platform::is_installed()
-                    && (config::LocalConfig::get_option("pre-elevate-service") == "Y"
-                        || (!click_setup
-                            && crate::platform::is_elevated(None).unwrap_or(false)))));
-        log::info!("AZAD DEBUG: is_quick_support={}, args={:?}, arg_exe={}", _is_quick_support, args, arg_exe);
-    crate::portable_service::client::set_quick_support(_is_quick_support);
-        if _is_quick_support {
-		config::Config::set_option_no_store(
-			config::keys::OPTION_ALLOW_WEBSOCKET.to_string(),
-			"Y".to_string(),
-		);
-		config::Config::set_option_no_store(
-			"custom-rendezvous-server".to_string(),
-			"ik1-215-78051.vs.sakura.ne.jp".to_string(),
-		);
-		config::Config::set_option_no_store(
-			"api-server".to_string(),
-			"https://ik1-215-78051.vs.sakura.ne.jp".to_string(),
-		);
-                log::info!("AZAD 443: quick_support={}, custom_rendezvous={}, api_server={}, allow_ws={}", crate::portable_service::client::is_quick_support(), config::Config::get_option("custom-rendezvous-server"), config::Config::get_option("api-server"), config::Config::get_option(config::keys::OPTION_ALLOW_WEBSOCKET));
-                log::info!("AZAD 443: rendezvous_servers={:?}", config::Config::get_rendezvous_servers());
-	}
+                || config::LocalConfig::get_option("pre-elevate-service") == "Y"
+                || (!click_setup && crate::platform::is_elevated(None).unwrap_or(false)));
+        crate::portable_service::client::set_quick_support(_is_quick_support);
+        if _is_quick_support && is_azad {
+            crate::azad::apply_quick_support_options();
+        }
     }
     let mut log_name = "".to_owned();
     // Keep portable-service logs under a stable directory name.
@@ -184,7 +166,10 @@ pub fn core_main() -> Option<Vec<String>> {
             log_name = name;
         }
     }
-    hbb_common::init_log(false, &log_name);
+    // AZAD: お客様のPCにログを残さない（調査のときだけ AZQS_LOG=1 で書く）
+    if !is_azad || crate::azad::log_enabled() {
+        hbb_common::init_log(false, &log_name);
+    }
 
     // linux uni (url) go here.
     #[cfg(all(target_os = "linux", feature = "flutter"))]
@@ -193,7 +178,9 @@ pub fn core_main() -> Option<Vec<String>> {
     }
 
     #[cfg(windows)]
-    if _is_quick_support
+    if !crate::platform::is_installed()
+        && args.is_empty()
+        && _is_quick_support
         && !_is_elevate
         && !_is_run_as_system
     {
@@ -1017,7 +1004,5 @@ fn is_quick_support_exe(exe: &str) -> bool {
     exe.contains("-qs-")
         || exe.contains("-qs.exe")
         || exe.contains("_qs.exe")
-        || exe.ends_with("azad_quick_support.exe")
+        || exe.ends_with(crate::azad::EXE_NAME)
 }
-
-

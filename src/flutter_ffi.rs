@@ -79,7 +79,10 @@ fn initialize(app_dir: &str, custom_client_config: &str) {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
         // core_main's init_log does not work for flutter since it is only applied to its load_library in main.c
-        hbb_common::init_log(false, "flutter_ffi");
+        // AZAD: お客様のPCにログを残さない（調査のときだけ AZQS_LOG=1 で書く）
+        if !crate::azad::is_azad_exe() || crate::azad::log_enabled() {
+            hbb_common::init_log(false, "flutter_ffi");
+        }
     }
 }
 

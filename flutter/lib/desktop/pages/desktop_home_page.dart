@@ -78,147 +78,125 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     ));
   }
 
+  /// AZAD QUICK SUPPORT の画面。お客様は、表示されたIDをサポート担当者に伝えるだけでよい。
+  /// ID と接続状態は ServerModel（ID は 1 秒ごと、状態は 0.5 秒ごとに更新）から表示する。
   Widget buildAzadQuickSupport(BuildContext context) {
-    return Center(
+    const blue = Color(0xFF1F5FBF);
+    const gray = Color(0xFF5F6B7A);
+    return Container(
+      color: const Color(0xFFF3F5F8),
+      alignment: Alignment.center,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(24),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
-          child: Card(
-            elevation: 3,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 40,
-                vertical: 36,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    "assets/logo_azad_script.png",
-                    width: 180,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "AZAD QUICK SUPPORT",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    "\u30ea\u30e2\u30fc\u30c8\u30b5\u30dd\u30fc\u30c8\u3092\u3054\u5229\u7528\u306e\u65b9\u3078",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    "\u4ee5\u4e0b\u306eID\u3092\u30b5\u30dd\u30fc\u30c8\u62c5\u5f53\u8005\u306b\u304a\u4f1d\u3048\u304f\u3060\u3055\u3044\u3002",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  const Text(
-                    "Your ID",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  FutureBuilder<String>(
-                    future: bind.mainGetMyId(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const SizedBox(
-                          width: 28,
-                          height: 28,
-                          child: CircularProgressIndicator(),
-                        );
-                      }
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFDDE2E8)),
+            ),
+            child: ChangeNotifierProvider.value(
+              value: gFFI.serverModel,
+              child: Consumer<ServerModel>(
+                builder: (context, model, _) {
+                  // serverId は表示用に空白で区切った ID（formatID）を持つ
+                  final id = model.serverId.text.replaceAll(' ', '');
+                  void copyId() {
+                    if (id.isEmpty) return;
+                    Clipboard.setData(ClipboardData(text: id));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("IDをコピーしました"),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
 
-                      final id = snapshot.data ?? "";
-
-                      void copyId() {
-                        if (id.isEmpty) return;
-
-                        Clipboard.setData(
-                          ClipboardData(text: id),
-                        );
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("ID copied"),
-                            duration: Duration(seconds: 1),
-                          ),
-                        );
-                      }
-
-                      return Column(
-                        children: [
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 14,
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        "assets/logo_azad_script.png",
+                        width: 160,
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "AZAD QUICK SUPPORT",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: blue,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      const Text(
+                        "リモートサポートをご利用の方へ",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 15, color: gray),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        "以下のIDをサポート担当者にお伝えください。",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 14, color: gray),
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.fromLTRB(16, 10, 6, 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF3FB),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            const Text(
+                              "ID",
+                              style: TextStyle(fontSize: 14, color: gray),
                             ),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .outline,
+                            Expanded(
+                              child: SelectableText(
+                                id.isEmpty ? "------" : id,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 6,
+                                  color: Color(0xFF1A2330),
+                                ),
                               ),
-                              borderRadius: BorderRadius.circular(10),
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Flexible(
-                                  child: SelectableText(
-                                    id,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      fontSize: 30,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 2,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  tooltip: "Copy ID",
-                                  icon: const Icon(Icons.copy),
-                                  onPressed: id.isEmpty ? null : copyId,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton.icon(
+                            IconButton(
+                              tooltip: "IDをコピー",
+                              icon: const Icon(Icons.copy, color: blue),
                               onPressed: id.isEmpty ? null : copyId,
-                              icon: const Icon(Icons.copy),
-                              label: const Text(
-                                "ID\u3092\u30b3\u30d4\u30fc\u3059\u308b",
-                                style: TextStyle(fontSize: 16),
-                              ),
                             ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 42,
+                        child: FilledButton.icon(
+                          style: FilledButton.styleFrom(backgroundColor: blue),
+                          onPressed: id.isEmpty ? null : copyId,
+                          icon: const Icon(Icons.copy, size: 18),
+                          label: const Text(
+                            "IDをコピーする",
+                            style: TextStyle(fontSize: 15),
                           ),
-                        ],
-                      );
-                    },
-                  ),
-                ],
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      _buildAzadStatus(model.connectStatus),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -226,6 +204,32 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       ),
     );
   }
+
+  /// 接続状態。1：準備完了、0：接続中、-1：接続できない（ServerModel.connectStatus）
+  Widget _buildAzadStatus(int status) {
+    final (Color color, String text) = switch (status) {
+      1 => (const Color(0xFF2E9B57), "サポートの準備ができています"),
+      0 => (const Color(0xFFE0A100), "サーバーに接続しています…"),
+      _ => (
+          const Color(0xFFD64545),
+          "サーバーに接続できません。インターネット接続をご確認ください。"
+        ),
+    };
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.circle, size: 10, color: color),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 13, color: color),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildBlock({required Widget child}) {
     return buildRemoteBlock(
         block: _block, mask: true, use: canBeBlocked, child: child);
