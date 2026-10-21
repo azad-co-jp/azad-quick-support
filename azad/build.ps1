@@ -40,6 +40,8 @@ $release = Join-Path $root 'flutter\build\windows\x64\runner\Release'
 if (-not $SkipFlutter) {
   Push-Location flutter
   try {
+    # 古いファイル（以前の exe や .bak）がポータブル版に入らないよう、Release を空にしてから作る
+    if (Test-Path $release) { Remove-Item $release -Recurse -Force }
     # .dart_tool はPCごとのパスを含むので、毎回このPC用に作り直す（pubspec.lock の版は変えない）
     Step 'flutter pub get' { flutter pub get --enforce-lockfile }
     Step 'flutter build windows' { flutter build windows --release }
