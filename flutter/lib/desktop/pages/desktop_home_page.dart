@@ -83,7 +83,10 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   Widget buildAzadQuickSupport(BuildContext context) {
     const blue = Color(0xFF1F5FBF);
     const gray = Color(0xFF5F6B7A);
-    return Container(
+    // Windows がダークモードでも文字が白くならないよう、常に明るい配色で表示する
+    return Theme(
+      data: MyTheme.lightTheme,
+      child: Container(
       color: const Color(0xFFF3F5F8),
       alignment: Alignment.center,
       child: SingleChildScrollView(
@@ -202,10 +205,11 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           ),
         ),
       ),
+    ),
     );
   }
 
-  /// 接続の要求（承諾・キャンセル）と、接続中の表示。
+  /// 接続の要求（承諾）と、接続中の表示。
   /// Quick Support では接続管理を別ウィンドウにせず、この画面で行う（src/azad.rs の cm_in_main_window）。
   Widget _buildAzadSession(ServerModel model) {
     final active = model.clients.where((c) => !c.disconnected).toList();
@@ -245,7 +249,10 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           const Text(
             "サポート担当者から接続の要求があります",
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A2330)),
           ),
           const SizedBox(height: 6),
           Text(
@@ -254,35 +261,34 @@ class _DesktopHomePageState extends State<DesktopHomePage>
             style: const TextStyle(fontSize: 13, color: Color(0xFF5F6B7A)),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => model.sendLoginResponse(client, false),
-                  child: const Text("キャンセル"),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF1F5FBF)),
-                  onPressed: () {
-                    model.sendLoginResponse(client, true);
-                    // AZAD: 承諾と同時に管理者権限を要求する（RustDesk の「承諾して権限を付与」と同じ）。
-                    // まだ権限がなければ、お客様の画面に UAC の確認が出る。
-                    if (bind.cmCanElevate() &&
-                        model.showElevation &&
-                        !client.isFileTransfer &&
-                        !client.isTerminal &&
-                        !client.isViewCamera) {
-                      bind.cmElevatePortable(connId: client.id);
-                    }
-                  },
-                  child: const Text("承諾する"),
-                ),
-              ),
-            ],
+          // キャンセルのボタンは置かない（押し間違いを防ぐ）。断るときはウィンドウを閉じる。
+          SizedBox(
+            width: double.infinity,
+            height: 42,
+            child: FilledButton(
+              style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF1F5FBF),
+                  foregroundColor: Colors.white),
+              onPressed: () {
+                model.sendLoginResponse(client, true);
+                // AZAD: 承諾と同時に管理者権限を要求する（RustDesk の「承諾して権限を付与」と同じ）。
+                // まだ権限がなければ、お客様の画面に UAC の確認が出る。
+                if (bind.cmCanElevate() &&
+                    model.showElevation &&
+                    !client.isFileTransfer &&
+                    !client.isTerminal &&
+                    !client.isViewCamera) {
+                  bind.cmElevatePortable(connId: client.id);
+                }
+              },
+              child: const Text("承諾する", style: TextStyle(fontSize: 15)),
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            "接続しない場合は、このウィンドウを閉じてください。",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: Color(0xFF5F6B7A)),
           ),
         ],
       ),

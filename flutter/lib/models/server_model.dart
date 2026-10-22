@@ -577,6 +577,17 @@ class ServerModel with ChangeNotifier {
       if (desktopType == DesktopType.cm && !hideCm) {
         showCmWindow();
       }
+      // AZAD: Quick Support では、承諾済みで接続中のサポート担当者（同じ ID）からの
+      // 追加の接続（ファイルの送受信など）は自動で承諾する。接続が終われば、次はまた承諾が要る。
+      if (!client.authorized &&
+          bind.isQuickSupport() &&
+          _clients.any((c) =>
+              c.id != client.id &&
+              c.authorized &&
+              !c.disconnected &&
+              c.peerId == client.peerId)) {
+        sendLoginResponse(client, true);
+      }
       scrollToBottom();
       notifyListeners();
       if (isAndroid && !client.authorized) showLoginDialog(client);
