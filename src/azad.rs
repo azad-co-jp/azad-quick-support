@@ -80,33 +80,39 @@ fn now_secs() -> u64 {
 /// リモート再起動の直前に呼ぶ（server/connection.rs の RestartRemoteDevice）。
 /// 次のサインインで Quick Support を1回だけ自動で起動し（RunOnce は実行後に自動で消える）、
 /// 再起動を指示した担当者（controller_id）からの再接続を、RESTART_TRUST_SECS の間だけ自動で承諾できるようにする。
+///
+/// 強制再起動の途中でドライバーが止まりブルースクリーンになる PC がある（2026-10-22 に社内PCで発生、停止コード 9F）。
+/// レジストリやファイルへの書き込みは遅れてディスクに書かれるため、再起動の前に必ずディスクへ書き出す。
 pub fn prepare_remote_restart(controller_id: &str) {
     #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        if let Ok(exe) = std::env::current_exe() {
-            let cmd = format!("\"{}\" --quick_support", exe.display());
-            let res = std::process::Command::new("reg")
-                .args([
-                    "add",
-                    r"HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce",
-                    "/v",
-                    APP_NAME,
-                    "/t",
-                    "REG_SZ",
-                    "/d",
-                    &cmd,
-                    "/f",
-                ])
-                .creation_flags(winapi::um::winbase::CREATE_NO_WINDOW)
-                .status();
-            hbb_common::log::info!("register RunOnce for remote restart: {:?}", res);
-        }
+    if let Err(err) = register_run_once() {
+        hbb_common::log::error!("Failed to register RunOnce for remote restart: {}", err);
     }
     let path = Config::path(RESTART_TRUST_FILE);
-    if let Err(err) = std::fs::write(&path, format!("{}\n{}", controller_id, now_secs())) {
+    let res = (|| -> std::io::Result<()> {
+        use std::io::Write;
+        let mut f = std::fs::File::create(&path)?;
+        f.write_all(format!("{}\n{}", controller_id, now_secs()).as_bytes())?;
+        f.sync_all()
+    })();
+    if let Err(err) = res {
         hbb_common::log::error!("Failed to write {}: {}", path.display(), err);
     }
+}
+
+/// HKCU の RunOnce に自分を登録し、レジストリをディスクに書き出す。
+#[cfg(windows)]
+fn register_run_once() -> std::io::Result<()> {
+    use winreg::{enums::HKEY_CURRENT_USER, RegKey};
+    let exe = std::env::current_exe()?;
+    let cmd = format!("\"{}\" --quick_support", exe.display());
+    let (key, _) = RegKey::predef(HKEY_CURRENT_USER)
+        .create_subkey(r"Software\Microsoft\Windows\CurrentVersion\RunOnce")?;
+    key.set_value(APP_NAME, &cmd)?;
+    // 再起動の前にディスクへ書き出す（書き出す前に PC が落ちると登録が消える）
+    let rc = unsafe { winapi::um::winreg::RegFlushKey(key.raw_handle()) };
+    hbb_common::log::info!("register RunOnce for remote restart: {} (flush {})", cmd, rc);
+    Ok(())
 }
 
 /// リモート再起動を指示した担当者からの再接続なら true（1回だけ）。期限切れの記録は消す。
