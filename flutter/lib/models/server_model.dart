@@ -597,7 +597,8 @@ class ServerModel with ChangeNotifier {
       if (!hideCm) windowOnTop(null);
     });
     // Only do the hidden task when on Desktop.
-    if (client.authorized && isDesktop) {
+    // AZAD: Quick Support は接続中であることをお客様が見られるよう、最小化しない
+    if (client.authorized && isDesktop && !bind.isQuickSupport()) {
       cmHiddenTimer = Timer(const Duration(seconds: 3), () {
         if (!hideCm) windowManager.minimize();
         cmHiddenTimer = null;

@@ -1571,13 +1571,18 @@ pub mod connection_manager {
             debug_assert!(h.get("name").is_none());
             h.insert("name", json!(name));
 
-            if let Some(s) = GLOBAL_EVENT_STREAM.read().unwrap().get(super::APP_TYPE_CM) {
+            // AZAD: Quick Support では接続の承諾を ID の画面（メインウィンドウ）で行う
+            let app_type = if crate::azad::cm_in_main_window() {
+                super::APP_TYPE_MAIN
+            } else {
+                super::APP_TYPE_CM
+            };
+            if let Some(s) = GLOBAL_EVENT_STREAM.read().unwrap().get(app_type) {
                 s.add(serde_json::ser::to_string(&h).unwrap_or("".to_owned()));
             } else {
                 println!(
                     "Push event {} failed. No {} event stream found.",
-                    name,
-                    super::APP_TYPE_CM
+                    name, app_type
                 );
             };
         }

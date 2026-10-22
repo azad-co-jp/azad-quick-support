@@ -193,7 +193,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                         ),
                       ),
                       const SizedBox(height: 18),
-                      _buildAzadStatus(model.connectStatus),
+                      _buildAzadSession(model),
                     ],
                   );
                 },
@@ -201,6 +201,140 @@ class _DesktopHomePageState extends State<DesktopHomePage>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// 接続の要求（承諾・キャンセル）と、接続中の表示。
+  /// Quick Support では接続管理を別ウィンドウにせず、この画面で行う（src/azad.rs の cm_in_main_window）。
+  Widget _buildAzadSession(ServerModel model) {
+    final active = model.clients.where((c) => !c.disconnected).toList();
+    final pending = active.where((c) => !c.authorized).toList();
+    final connected = active.where((c) => c.authorized).toList();
+    if (pending.isNotEmpty) {
+      return _buildAzadRequest(model, pending.first);
+    }
+    if (connected.isNotEmpty) {
+      return _buildAzadConnected(connected);
+    }
+    return _buildAzadStatus(model.connectStatus);
+  }
+
+  static String _azadConnKind(Client c) => c.isFileTransfer
+      ? "ファイルの送受信"
+      : c.isTerminal
+          ? "コマンド操作"
+          : c.isViewCamera
+              ? "カメラの表示"
+              : "画面の操作";
+
+  static String _azadPeer(Client c) =>
+      c.name.isEmpty ? c.peerId : "${c.name}（${c.peerId}）";
+
+  Widget _buildAzadRequest(ServerModel model, Client client) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8E5),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE0A100)),
+      ),
+      child: Column(
+        children: [
+          const Text(
+            "サポート担当者から接続の要求があります",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            "${_azadPeer(client)}\n内容：${_azadConnKind(client)}",
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 13, color: Color(0xFF5F6B7A)),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => model.sendLoginResponse(client, false),
+                  child: const Text("キャンセル"),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF1F5FBF)),
+                  onPressed: () {
+                    model.sendLoginResponse(client, true);
+                    // AZAD: 承諾と同時に管理者権限を要求する（RustDesk の「承諾して権限を付与」と同じ）。
+                    // まだ権限がなければ、お客様の画面に UAC の確認が出る。
+                    if (bind.cmCanElevate() &&
+                        model.showElevation &&
+                        !client.isFileTransfer &&
+                        !client.isTerminal &&
+                        !client.isViewCamera) {
+                      bind.cmElevatePortable(connId: client.id);
+                    }
+                  },
+                  child: const Text("承諾する"),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAzadConnected(List<Client> clients) {
+    const red = Color(0xFFD64545);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFDEEEE),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: red),
+      ),
+      child: Column(
+        children: [
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.circle, size: 12, color: red),
+              SizedBox(width: 8),
+              Text(
+                "接続中",
+                style: TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.bold, color: red),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          for (final c in clients)
+            Text(
+              "${_azadPeer(c)} が${_azadConnKind(c)}をしています",
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 13, color: Color(0xFF5F6B7A)),
+            ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(foregroundColor: red),
+              onPressed: () async {
+                for (final c in clients) {
+                  await bind.cmCloseConnection(connId: c.id);
+                }
+              },
+              icon: const Icon(Icons.link_off, size: 18),
+              label: const Text("接続を終了する"),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -151,6 +151,7 @@ pub fn core_main() -> Option<Vec<String>> {
         crate::portable_service::client::set_quick_support(_is_quick_support);
         if _is_quick_support && is_azad {
             crate::azad::apply_quick_support_options();
+            crate::azad::start_cm_in_main_window();
         }
     }
     let mut log_name = "".to_owned();

@@ -44,6 +44,28 @@ pub fn apply_quick_support_options() {
     set("approve-mode", "click");
 }
 
+/// 接続の承諾・切断を、別ウィンドウ（--cm）ではなく ID の画面で行うか。
+/// Quick Support のメインプロセスが接続管理の IPC（_cm）を受け持つので、別ウィンドウは起動されない。
+pub fn cm_in_main_window() -> bool {
+    #[cfg(windows)]
+    {
+        crate::portable_service::client::is_quick_support()
+    }
+    #[cfg(not(windows))]
+    {
+        false
+    }
+}
+
+/// Quick Support のメインプロセスで、接続管理の IPC（_cm）を受け持つ。
+/// サーバーは接続時にまず _cm へつなぎ、つながらないときだけ --cm のウィンドウを起動する（server/connection.rs）。
+pub fn start_cm_in_main_window() {
+    #[cfg(feature = "flutter")]
+    if cm_in_main_window() {
+        crate::flutter::connection_manager::cm_init();
+    }
+}
+
 pub fn log_enabled() -> bool {
     std::env::var(LOG_ENV).map(|v| v == "1").unwrap_or(false)
 }
