@@ -235,6 +235,13 @@ impl<T: InvokeUiCM> ConnectionManager<T> {
         from_switch: bool,
         #[cfg(not(any(target_os = "ios")))] tx: mpsc::UnboundedSender<Data>,
     ) {
+        // AZAD: リモート再起動の後、再起動を指示した担当者からの再接続は自動で承諾する
+        #[cfg(windows)]
+        let auto_authorize = !authorized
+            && crate::azad::cm_in_main_window()
+            && crate::azad::take_restart_trust(&peer_id);
+        #[cfg(windows)]
+        let authorized = authorized || auto_authorize;
         let client = Client {
             id,
             authorized,
@@ -265,6 +272,11 @@ impl<T: InvokeUiCM> ConnectionManager<T> {
             .unwrap()
             .retain(|_, c| !(c.disconnected && c.peer_id == client.peer_id));
         CLIENTS.write().unwrap().insert(id, client.clone());
+        #[cfg(windows)]
+        if auto_authorize {
+            log::info!("auto authorize the reconnection after remote restart");
+            allow_err!(client.tx.send(Data::Authorize));
+        }
         self.ui_handler.add_connection(&client);
     }
 

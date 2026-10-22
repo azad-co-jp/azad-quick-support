@@ -66,6 +66,66 @@ pub fn start_cm_in_main_window() {
     }
 }
 
+/// リモート再起動の後、再起動を指示した担当者からの再接続を自動で承諾する期間。
+const RESTART_TRUST_SECS: u64 = 15 * 60;
+const RESTART_TRUST_FILE: &str = "azad_restart_trust";
+
+fn now_secs() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
+}
+
+/// リモート再起動の直前に呼ぶ（server/connection.rs の RestartRemoteDevice）。
+/// 次のサインインで Quick Support を1回だけ自動で起動し（RunOnce は実行後に自動で消える）、
+/// 再起動を指示した担当者（controller_id）からの再接続を、RESTART_TRUST_SECS の間だけ自動で承諾できるようにする。
+pub fn prepare_remote_restart(controller_id: &str) {
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        if let Ok(exe) = std::env::current_exe() {
+            let cmd = format!("\"{}\" --quick_support", exe.display());
+            let res = std::process::Command::new("reg")
+                .args([
+                    "add",
+                    r"HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce",
+                    "/v",
+                    APP_NAME,
+                    "/t",
+                    "REG_SZ",
+                    "/d",
+                    &cmd,
+                    "/f",
+                ])
+                .creation_flags(winapi::um::winbase::CREATE_NO_WINDOW)
+                .status();
+            hbb_common::log::info!("register RunOnce for remote restart: {:?}", res);
+        }
+    }
+    let path = Config::path(RESTART_TRUST_FILE);
+    if let Err(err) = std::fs::write(&path, format!("{}\n{}", controller_id, now_secs())) {
+        hbb_common::log::error!("Failed to write {}: {}", path.display(), err);
+    }
+}
+
+/// リモート再起動を指示した担当者からの再接続なら true（1回だけ）。期限切れの記録は消す。
+pub fn take_restart_trust(peer_id: &str) -> bool {
+    let path = Config::path(RESTART_TRUST_FILE);
+    let Ok(content) = std::fs::read_to_string(&path) else {
+        return false;
+    };
+    let mut lines = content.lines();
+    let id = lines.next().unwrap_or_default();
+    let ts = lines.next().and_then(|v| v.parse::<u64>().ok()).unwrap_or(0);
+    let fresh = now_secs().saturating_sub(ts) <= RESTART_TRUST_SECS;
+    let matched = fresh && !id.is_empty() && id == peer_id;
+    if matched || !fresh {
+        std::fs::remove_file(&path).ok();
+    }
+    matched
+}
+
 pub fn log_enabled() -> bool {
     std::env::var(LOG_ENV).map(|v| v == "1").unwrap_or(false)
 }
