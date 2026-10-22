@@ -17,7 +17,8 @@ const APP_METADATA: &[u8] = include_bytes!("../app_metadata.toml");
 const APP_METADATA: &[u8] = &[];
 const APP_METADATA_CONFIG: &str = "meta.toml";
 const META_LINE_PREFIX_TIMESTAMP: &str = "timestamp = ";
-const APP_PREFIX: &str = "rustdesk";
+// AZAD: 公式の RustDesk のポータブル版（%LOCALAPPDATA%\rustdesk）と混ざらないよう、別の名前にする
+const APP_PREFIX: &str = "AZADQuickSupport";
 const APPNAME_RUNTIME_ENV_KEY: &str = "RUSTDESK_APPNAME";
 #[cfg(windows)]
 const SET_FOREGROUND_WINDOW_ENV_KEY: &str = "SET_FOREGROUND_WINDOW";
@@ -50,6 +51,32 @@ fn is_timestamp_matches(dir: &Path, ts: &mut u64) -> bool {
     false
 }
 
+/// AZAD: 版（app_metadata.toml の timestamp）ごとに別のフォルダーに展開する。
+/// 古い版が起動したままでも、使用中のファイルに邪魔されずに新しい版を展開できる。
+/// 使われていない古い版のフォルダーは消す（使用中なら消せずに残るが、次の機会に消える）。
+fn versioned_dir(base: PathBuf) -> PathBuf {
+    let ts = std::str::from_utf8(APP_METADATA)
+        .ok()
+        .and_then(|m| {
+            m.lines()
+                .find(|l| l.starts_with(META_LINE_PREFIX_TIMESTAMP))
+                .and_then(|l| l.replace(META_LINE_PREFIX_TIMESTAMP, "").parse::<u64>().ok())
+        })
+        .unwrap_or(0);
+    if ts == 0 {
+        return base;
+    }
+    let name = ts.to_string();
+    if let Ok(entries) = std::fs::read_dir(&base) {
+        for entry in entries.flatten() {
+            if entry.file_name().to_string_lossy() != name && entry.path().is_dir() {
+                std::fs::remove_dir_all(entry.path()).ok();
+            }
+        }
+    }
+    base.join(name)
+}
+
 fn write_meta(dir: &Path, ts: u64) {
     let meta_file = dir.join(APP_METADATA_CONFIG);
     if ts != 0 {
@@ -71,7 +98,7 @@ fn setup(
     } else {
         // home dir
         if let Some(dir) = dirs::data_local_dir() {
-            dir.join(APP_PREFIX)
+            versioned_dir(dir.join(APP_PREFIX))
         } else {
             eprintln!("not found data local dir");
             return None;

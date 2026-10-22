@@ -1514,16 +1514,98 @@ pub mod client {
     }
 
     pub fn create_capturer(
-        _current_display: usize,
+        current_display: usize,
         display: scrap::Display,
-        _portable_service_running: bool,
+        portable_service_running: bool,
     ) -> ResultType<Box<dyn TraitCapturer>> {
-        // AZAD: ポータブルサービス（SYSTEM）経由の共有メモリでの取り込みでは映像が出なかったため、
-        // 直接取り込む。UACの確認画面など、管理者の画面は映らない可能性がある（要確認）。
-        log::debug!("Create capturer dxgi|gdi");
-        Ok(Box::new(
-            Capturer::new(display).with_context(|| "Failed to create capturer")?,
-        ))
+        if portable_service_running != RUNNING.lock().unwrap().clone() {
+            log::info!("portable service status mismatch");
+        }
+        if portable_service_running && display.is_primary() {
+            log::info!("Create shared memory capturer");
+            // AZAD: 管理者権限（SYSTEM）のポータブルサービス経由で取り込む。UAC の確認画面も映る。
+            // 映像が来ないときは直接の取り込みに切り替える（CapturerPortableOrDirect）。
+            return Ok(Box::new(CapturerPortableOrDirect::new(
+                current_display,
+                display,
+            )));
+        } else {
+            log::debug!("Create capturer dxgi|gdi");
+            return Ok(Box::new(
+                Capturer::new(display).with_context(|| "Failed to create capturer")?,
+            ));
+        }
+    }
+
+    /// AZAD: ポータブルサービス経由の取り込みで、作成から一定時間たっても1枚も映像が来ないときは、
+    /// 直接の取り込みに切り替える。一度でも映像が来れば、ポータブルサービス経由のまま使う。
+    struct CapturerPortableOrDirect {
+        portable: CapturerPortable,
+        display: Option<scrap::Display>,
+        direct: Option<Capturer>,
+        created: std::time::Instant,
+        got_frame: bool,
+    }
+
+    const PORTABLE_FIRST_FRAME_TIMEOUT: Duration = Duration::from_secs(5);
+
+    impl CapturerPortableOrDirect {
+        fn new(current_display: usize, display: scrap::Display) -> Self {
+            Self {
+                portable: CapturerPortable::new(current_display),
+                display: Some(display),
+                direct: None,
+                created: std::time::Instant::now(),
+                got_frame: false,
+            }
+        }
+    }
+
+    impl TraitCapturer for CapturerPortableOrDirect {
+        fn frame<'a>(&'a mut self, timeout: Duration) -> std::io::Result<Frame<'a>> {
+            if self.direct.is_none() {
+                let err = match self.portable.frame(timeout) {
+                    Ok(f) => {
+                        self.got_frame = true;
+                        return Ok(f);
+                    }
+                    Err(e) => e,
+                };
+                if self.got_frame || self.created.elapsed() < PORTABLE_FIRST_FRAME_TIMEOUT {
+                    return Err(err);
+                }
+                let Some(display) = self.display.take() else {
+                    return Err(err);
+                };
+                log::warn!(
+                    "No frame from portable service in {:?} ({}), fall back to direct capture",
+                    PORTABLE_FIRST_FRAME_TIMEOUT,
+                    err
+                );
+                self.direct = Some(Capturer::new(display)?);
+            }
+            match self.direct.as_mut() {
+                Some(d) => d.frame(timeout),
+                None => Err(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    "no capturer".to_string(),
+                )),
+            }
+        }
+
+        fn is_gdi(&self) -> bool {
+            match self.direct.as_ref() {
+                Some(d) => d.is_gdi(),
+                None => self.portable.is_gdi(),
+            }
+        }
+
+        fn set_gdi(&mut self) -> bool {
+            match self.direct.as_mut() {
+                Some(d) => d.set_gdi(),
+                None => self.portable.set_gdi(),
+            }
+        }
     }
 
     pub fn get_cursor_info(pci: PCURSORINFO) -> BOOL {
