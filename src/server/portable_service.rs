@@ -578,6 +578,9 @@ pub mod server {
         }
     }
 
+    // AZAD: 作成からこの時間たっても DXGI から1枚も映像が来なければ GDI に切り替える
+    const NO_IMAGE_FALLBACK_GDI: Duration = Duration::from_millis(1000);
+
     fn run_capture(shmem: Arc<SharedMemory>) {
         let mut c = None;
         let mut last_current_display = usize::MAX;
@@ -587,6 +590,10 @@ pub mod server {
         let mut dxgi_failed_times = 0;
         let mut display_width = 0;
         let mut display_height = 0;
+        // AZAD: DXGI がエラーにならずに映像を返さない環境（WouldBlock が続く）では GDI に切り替える。
+        // 一度切り替えたら、作り直すとき（UAC の画面への切り替えなど）も GDI で作る。
+        let mut prefer_gdi = false;
+        let mut created_at = std::time::Instant::now();
         loop {
             if EXIT.lock().unwrap().clone() {
                 break;
@@ -620,6 +627,10 @@ pub mod server {
                                     dxgi_failed_times = 0;
                                     v.set_gdi();
                                 }
+                                if prefer_gdi {
+                                    v.set_gdi();
+                                }
+                                created_at = std::time::Instant::now();
                                 utils::set_para(
                                     &shmem,
                                     CapturerPara {
@@ -714,6 +725,16 @@ pub mod server {
                             }
                         } else {
                             shmem.write(ADDR_CAPTURE_WOULDBLOCK, &utils::i32_to_vec(TRUE));
+                            if !first_frame_captured
+                                && c.as_ref().map(|c| c.is_gdi()) == Some(false)
+                                && created_at.elapsed() > NO_IMAGE_FALLBACK_GDI
+                            {
+                                if let Some(c) = c.as_mut() {
+                                    c.set_gdi();
+                                }
+                                prefer_gdi = true;
+                                log::info!("No image from dxgi in {:?}, fall back to gdi", NO_IMAGE_FALLBACK_GDI);
+                            }
                         }
                     }
                     _ => {

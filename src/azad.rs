@@ -126,6 +126,18 @@ pub fn take_restart_trust(peer_id: &str) -> bool {
     matched
 }
 
+/// 調査用にログを書くか。環境変数 AZQS_LOG=1、または %ProgramData%\AZADQuickSupport\debug_log があるとき。
+/// 管理者権限（SYSTEM）で動くポータブルサービスには環境変数が届かないので、ファイルでも切り替えられるようにする。
 pub fn log_enabled() -> bool {
-    std::env::var(LOG_ENV).map(|v| v == "1").unwrap_or(false)
+    if std::env::var(LOG_ENV).map(|v| v == "1").unwrap_or(false) {
+        return true;
+    }
+    std::env::var("ProgramData")
+        .map(|d| {
+            std::path::Path::new(&d)
+                .join(APP_NAME)
+                .join("debug_log")
+                .exists()
+        })
+        .unwrap_or(false)
 }
