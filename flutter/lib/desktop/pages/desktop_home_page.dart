@@ -210,7 +210,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                       ),
                       TextButton(
                         onPressed: () => _showAzadAbout(context),
-                        child: const Text("このソフトについて",
+                        child: const Text("About",
                             style: TextStyle(fontSize: 12)),
                       ),
                     ],
@@ -225,7 +225,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     );
   }
 
-  /// 「このソフトについて」（英語で表示）。AGPL-3.0 の表示（改変したこと・無保証・ライセンス・ソースの入手先）と、
+  /// 「About」（英語で表示）。AGPL-3.0 の表示（改変したこと・無保証・ライセンス・ソースの入手先）と、
   /// プライバシーの説明をまとめて載せる。メイン画面には接続先の1行だけを出す。
   void _showAzadAbout(BuildContext context) {
     const gray = Color(0xFF5F6B7A);
