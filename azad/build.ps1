@@ -34,6 +34,8 @@ function Step($name, [scriptblock]$block) {
 
 if (-not $SkipRust) {
   Step 'cargo build (librustdesk.dll)' { cargo build --locked --features flutter --lib --release }
+  # 仮想ディスプレイ用の DLL（別のパッケージなので明示して作る）
+  Step 'cargo build (dylib_virtual_display.dll)' { cargo build --locked --release -p dylib_virtual_display }
 }
 
 $release = Join-Path $root 'flutter\build\windows\x64\runner\Release'

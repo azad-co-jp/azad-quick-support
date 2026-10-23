@@ -76,7 +76,10 @@ jobs:
           $VCPKG_ROOT/vcpkg install --triplet $VCPKG_TRIPLET --x-install-root="$VCPKG_ROOT/installed"
 
       - name: Build librustdesk.dll
-        run: cargo build --locked --features flutter --lib --release
+        run: |
+          cargo build --locked --features flutter --lib --release
+          # 仮想ディスプレイ用の DLL（別のパッケージなので明示して作る）
+          cargo build --locked --release -p dylib_virtual_display
 
       - name: Build flutter app
         working-directory: flutter
