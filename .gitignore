@@ -56,3 +56,9 @@ vcpkg_installed
 flutter/lib/generated_plugin_registrant.dart
 libsciter.dylib
 flutter/web/
+# AZAD: このPCでのビルドの記録と成果物
+azad/build_*.log
+azad/publish_rewrite.sh
+azad/icon_preview.png
+dist/
+libs/portable/app_metadata.toml
