@@ -1,4 +1,8 @@
 fn main() {
+    // AZAD: アイコン・マニフェストはパッケージの外にあるので、変わったら作り直すよう明示する
+    println!("cargo:rerun-if-changed=../../res/icon.ico");
+    println!("cargo:rerun-if-changed=../../res/manifest.xml");
+    println!("cargo:rerun-if-changed=build.rs");
     #[cfg(windows)]
     {
         use std::io::Write;

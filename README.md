@@ -1,182 +1,97 @@
-<p align="center">
-  <img src="res/logo-header.svg" alt="RustDesk - Your remote desktop"><br>
-  <a href="#raw-steps-to-build">Build</a> •
-  <a href="#how-to-build-with-docker">Docker</a> •
-  <a href="#file-structure">Structure</a> •
-  <a href="#snapshot">Snapshot</a><br>
-  [<a href="docs/README-UA.md">Українська</a>] | [<a href="docs/README-CS.md">česky</a>] | [<a href="docs/README-ZH.md">中文</a>] | [<a href="docs/README-HU.md">Magyar</a>] | [<a href="docs/README-ES.md">Español</a>] | [<a href="docs/README-FA.md">فارسی</a>] | [<a href="docs/README-FR.md">Français</a>] | [<a href="docs/README-DE.md">Deutsch</a>] | [<a href="docs/README-PL.md">Polski</a>] | [<a href="docs/README-ID.md">Indonesian</a>] | [<a href="docs/README-FI.md">Suomi</a>] | [<a href="docs/README-ML.md">മലയാളം</a>] | [<a href="docs/README-JP.md">日本語</a>] | [<a href="docs/README-NL.md">Nederlands</a>] | [<a href="docs/README-IT.md">Italiano</a>] | [<a href="docs/README-RU.md">Русский</a>] | [<a href="docs/README-PTBR.md">Português (Brasil)</a>] | [<a href="docs/README-EO.md">Esperanto</a>] | [<a href="docs/README-KR.md">한국어</a>] | [<a href="docs/README-AR.md">العربي</a>] | [<a href="docs/README-VN.md">Tiếng Việt</a>] | [<a href="docs/README-DA.md">Dansk</a>] | [<a href="docs/README-GR.md">Ελληνικά</a>] | [<a href="docs/README-TR.md">Türkçe</a>] | [<a href="docs/README-NO.md">Norsk</a>] | [<a href="docs/README-RO.md">Română</a>]<br>
-  <b>We need your help to translate this README, <a href="https://github.com/rustdesk/rustdesk/tree/master/src/lang">RustDesk UI</a> and <a href="https://github.com/rustdesk/doc.rustdesk.com">RustDesk Doc</a> to your native language</b>
-</p>
+# AZAD Quick Support
 
-> [!Caution]
-> **Misuse Disclaimer:** <br>
-> The developers of RustDesk do not condone or support any unethical or illegal use of this software. Misuse, such as unauthorized access, control or invasion of privacy, is strictly against our guidelines. The authors are not responsible for any misuse of the application.
+AZAD Quick Support is a remote support tool for Windows, used by AZAD Co., Ltd. to help its customers.
+It is a modified version of [RustDesk](https://github.com/rustdesk/rustdesk) 1.4.9 and is licensed under the GNU AGPL-3.0.
 
+AZAD Quick Support は、AZAD Co., Ltd. がお客様のPCのトラブル解決に使う、Windows 用の遠隔サポートソフトです。
+オープンソースの遠隔操作ソフト [RustDesk](https://github.com/rustdesk/rustdesk) 1.4.9 を改変したもので、GNU AGPL-3.0 のもとで公開しています。
 
-Chat with us: [Discord](https://discord.gg/nDceKgxnkV) | [Twitter](https://twitter.com/rustdesk) | [Reddit](https://www.reddit.com/r/rustdesk) | [YouTube](https://www.youtube.com/@rustdesk)
+## How it works / 使い方
 
-[![RustDesk Server Pro](https://img.shields.io/badge/RustDesk%20Server%20Pro-Advanced%20Features-blue)](https://rustdesk.com/pricing.html)
+1. The customer downloads `azad_quick_support.exe` and runs it. No installation is needed.
+2. The window shows a 6-digit ID. The customer tells the ID to the AZAD support staff by phone.
+3. When the support staff connects, the customer clicks "承諾する" (Accept). The connection never starts without the customer's click.
+4. The customer can end the connection at any time with "接続を終了する" or by closing the window.
 
-Yet another remote desktop solution, written in Rust. Works out of the box with no configuration required. You have full control of your data, with no concerns about security. You can use our rendezvous/relay server, [set up your own](https://rustdesk.com/server), or [write your own rendezvous/relay server](https://github.com/rustdesk/rustdesk-server-demo).
+1. お客様は `azad_quick_support.exe` をダウンロードして起動します（インストールは不要です）。
+2. 画面に表示された6桁のIDを、電話などでサポート担当者に伝えます。
+3. サポート担当者から接続の要求が来たら、「承諾する」を押します。お客様が押さない限り、接続は始まりません。
+4. 「接続を終了する」を押すか、ウィンドウを閉じれば、いつでも接続を終えられます。
 
-![image](https://user-images.githubusercontent.com/71636191/171661982-430285f0-2e12-4b1d-9957-4a58e375304d.png)
+## Download / ダウンロード
 
-RustDesk welcomes contribution from everyone. See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for help getting started.
+Download the latest `azad_quick_support.exe` from [Releases](https://github.com/azad-co-jp/azad-quick-support/releases).
+Please use it only when AZAD support staff asks you to.
 
-[**FAQ**](https://github.com/rustdesk/rustdesk/wiki/FAQ)
+最新の `azad_quick_support.exe` は [Releases](https://github.com/azad-co-jp/azad-quick-support/releases) からダウンロードできます。
+AZAD のサポート担当者から案内があったときにお使いください。
 
-[**BINARY DOWNLOAD**](https://github.com/rustdesk/rustdesk/releases)
+## Changes from RustDesk / RustDesk からの主な変更
 
-[**NIGHTLY BUILD**](https://github.com/rustdesk/rustdesk/releases/tag/nightly)
+- Connects only to the AZAD server (`remote.azad.co.jp`) over WebSocket (TCP 443). No other ports are needed on the customer's network.
+- Simple Japanese UI that shows the 6-digit ID; the customer accepts each support session in this window.
+- Uses its own settings folder and name (`AZADQuickSupport`), so it does not interfere with an installed RustDesk.
+- Writes no log files on the customer's PC.
+- Supports UAC prompts through the elevated portable service, and reconnects automatically after a remote restart.
 
-[<img src="https://f-droid.org/badge/get-it-on.png"
-    alt="Get it on F-Droid"
-    height="80">](https://f-droid.org/en/packages/com.carriez.flutter_hbb)
-[<img src="https://flathub.org/api/badge?svg&locale=en"
-    alt="Get it on Flathub"
-    height="80">](https://flathub.org/apps/com.rustdesk.RustDesk)
+The server side (modified hbbs/hbbr) is published at [azad-rustdesk-server](https://github.com/azad-co-jp/azad-rustdesk-server).
+All AZAD-specific values are collected in [`src/azad.rs`](src/azad.rs).
 
-## Dependencies
+## Code signing policy / コード署名の方針
 
-Desktop versions use Flutter or Sciter (deprecated) for GUI, this tutorial is for Sciter only, since it is easier and more friendly to start. Check out our [CI](https://github.com/rustdesk/rustdesk/blob/master/.github/workflows/flutter-build.yml) for building Flutter version.
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
 
-Please download Sciter dynamic library yourself.
+- **What is signed:** `azad_quick_support.exe` and the executables and libraries packed inside it, built by the GitHub Actions workflow [`azad-build.yml`](.github/workflows/azad-build.yml) from the source code in this repository.
+- **Committers and reviewers:** [Azad-hub-code](https://github.com/Azad-hub-code) (AZAD Co., Ltd.)
+- **Approvers:** [Azad-hub-code](https://github.com/Azad-hub-code) (AZAD Co., Ltd.)
+- Every signing request is approved manually by an approver. Only binaries built on GitHub-hosted runners from this repository are signed.
 
-[Windows](https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.win/x64/sciter.dll) |
-[Linux](https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.lnx/x64/libsciter-gtk.so) |
-[macOS](https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.osx/libsciter.dylib)
+[SignPath.io](https://about.signpath.io) による無料のコード署名を利用し、証明書は [SignPath Foundation](https://signpath.org) が発行しています。
+署名するのは、このリポジトリのソースから GitHub Actions でビルドした `azad_quick_support.exe` と、その中に含まれる実行ファイル・ライブラリだけです。署名のたびに承認者が承認します。
 
-## Raw Steps to build
+## Privacy policy / プライバシーポリシー
 
-- Prepare your Rust development env and C++ build env
+This program connects to the AZAD server (`remote.azad.co.jp`, operated by AZAD Co., Ltd.) to provide remote support.
+The program will not transfer any information to other networked systems.
 
-- Install [vcpkg](https://github.com/microsoft/vcpkg), and set `VCPKG_ROOT` env variable correctly
+- **Sent to the AZAD server:** the 6-digit ID of the PC, the public IP address, and the time, duration and amount of data of each support session. These records are kept on the AZAD server to investigate problems and to confirm support work.
+- **Not visible to the server:** screen images, keyboard and mouse input, clipboard and files are end-to-end encrypted between the customer's PC and the support staff's PC. The server only relays them.
+- **On the customer's PC:** no log files are written. A small settings folder keeps the ID so that the ID stays the same.
+- **How to stop:** close the program. It sends nothing while it is not running.
 
-  - Windows: vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static aom:x64-windows-static
-  - Linux/macOS: vcpkg install libvpx libyuv opus aom
+このソフトは、遠隔サポートのために AZAD のサーバー（`remote.azad.co.jp`、AZAD Co., Ltd. が運用）に接続します。それ以外の場所には情報を送りません。
 
-- run `cargo run`
+- **サーバーに送る情報：** このPCの6桁のID、グローバルIPアドレス、サポートの日時・時間・データ量。トラブルの調査とサポート作業の確認のため、AZAD のサーバーに記録します。
+- **サーバーでは見られない情報：** 画面、キーボード・マウスの操作、クリップボード、ファイルは、お客様のPCとサポート担当者のPCの間で暗号化され、サーバーは中継するだけです。
+- **お客様のPCに残るもの：** ログは残しません。IDを毎回同じにするため、小さな設定フォルダーだけを残します。
+- **止め方：** ソフトを終了してください。起動していない間は何も送りません。
 
-## [Build](https://rustdesk.com/docs/en/dev/build/)
+## Changes to your system / PCへの変更
 
-## How to Build on Linux
+- On start, the program asks for administrator rights (UAC) so that the support staff can operate administrator windows. If you decline, it still works with limited functions.
+- The program is extracted to `%LOCALAPPDATA%\AZADQuickSupport` and keeps its settings in `%APPDATA%\AZADQuickSupport`.
+- When the support staff restarts your PC remotely, the program registers itself once in `HKCU\Software\Microsoft\Windows\CurrentVersion\RunOnce` so that it starts again after you sign in. Windows removes the entry after it runs.
+- **To remove the program**, delete the downloaded `azad_quick_support.exe` and the two folders above.
 
-### Ubuntu 18 (Debian 10)
+- 起動すると、管理者の画面も操作できるよう、管理者権限（UAC）の確認が出ます。許可しなくても、機能を制限して動きます。
+- ソフトは `%LOCALAPPDATA%\AZADQuickSupport` に展開され、設定は `%APPDATA%\AZADQuickSupport` に保存されます。
+- サポート担当者がPCを遠隔で再起動するときは、サインイン後に1回だけ起動するよう `RunOnce` に登録します（実行後は Windows が自動で消します）。
+- **削除するには**、ダウンロードした `azad_quick_support.exe` と、上の2つのフォルダーを削除してください。
 
-```sh
-sudo apt install -y zip g++ gcc git curl wget nasm yasm libgtk-3-dev clang libxcb-randr0-dev libxdo-dev \
-        libxfixes-dev libxcb-shape0-dev libxcb-xfixes0-dev libasound2-dev libpulse-dev cmake make \
-        libclang-dev ninja-build libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libpam0g-dev
+## Build / ビルド
+
+Windows x64 only. Releases are built by [`.github/workflows/azad-build.yml`](.github/workflows/azad-build.yml) on GitHub-hosted runners.
+To build locally, install Visual Studio 2022 Build Tools (C++), Rust 1.97.1, LLVM 20.1.8, Flutter 3.27.4, Python 3 and vcpkg (`x64-windows-static`, see `vcpkg.json`), then run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File azad\build.ps1
 ```
 
-### openSUSE Tumbleweed
+The bridge files between Rust and Flutter are generated by `flutter_rust_bridge_codegen` 1.80.1 (see [`.github/workflows/bridge.yml`](.github/workflows/bridge.yml)).
 
-```sh
-sudo zypper install gcc-c++ git curl wget nasm yasm gcc gtk3-devel clang libxcb-devel libXfixes-devel cmake alsa-lib-devel gstreamer-devel gstreamer-plugins-base-devel xdotool-devel pam-devel
-```
+## License / ライセンス
 
-### Fedora 28 (CentOS 8)
-
-```sh
-sudo yum -y install gcc-c++ git curl wget nasm yasm gcc gtk3-devel clang libxcb-devel libxdo-devel libXfixes-devel pulseaudio-libs-devel cmake alsa-lib-devel gstreamer1-devel gstreamer1-plugins-base-devel pam-devel
-```
-
-### Arch (Manjaro)
-
-```sh
-sudo pacman -Syu --needed unzip git cmake gcc curl wget yasm nasm zip make pkg-config clang gtk3 xdotool libxcb libxfixes alsa-lib pipewire
-```
-
-### Install vcpkg
-
-```sh
-git clone https://github.com/microsoft/vcpkg
-cd vcpkg
-git checkout 2023.04.15
-cd ..
-vcpkg/bootstrap-vcpkg.sh
-export VCPKG_ROOT=$HOME/vcpkg
-vcpkg/vcpkg install libvpx libyuv opus aom
-```
-
-### Fix libvpx (For Fedora)
-
-```sh
-cd vcpkg/buildtrees/libvpx/src
-cd *
-./configure
-sed -i 's/CFLAGS+=-I/CFLAGS+=-fPIC -I/g' Makefile
-sed -i 's/CXXFLAGS+=-I/CXXFLAGS+=-fPIC -I/g' Makefile
-make
-cp libvpx.a $HOME/vcpkg/installed/x64-linux/lib/
-cd
-```
-
-### Build
-
-```sh
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source $HOME/.cargo/env
-git clone --recurse-submodules https://github.com/rustdesk/rustdesk
-cd rustdesk
-mkdir -p target/debug
-wget https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.lnx/x64/libsciter-gtk.so
-mv libsciter-gtk.so target/debug
-VCPKG_ROOT=$HOME/vcpkg cargo run
-```
-
-## How to build with Docker
-
-Begin by cloning the repository and building the Docker container:
-
-```sh
-git clone https://github.com/rustdesk/rustdesk
-cd rustdesk
-git submodule update --init --recursive
-docker build -t "rustdesk-builder" .
-```
-
-Then, each time you need to build the application, run the following command:
-
-```sh
-docker run --rm -it -v $PWD:/home/user/rustdesk -v rustdesk-git-cache:/home/user/.cargo/git -v rustdesk-registry-cache:/home/user/.cargo/registry -e PUID="$(id -u)" -e PGID="$(id -g)" rustdesk-builder
-```
-
-Note that the first build may take longer before dependencies are cached, subsequent builds will be faster. Additionally, if you need to specify different arguments to the build command, you may do so at the end of the command in the `<OPTIONAL-ARGS>` position. For instance, if you wanted to build an optimized release version, you would run the command above followed by `--release`. The resulting executable will be available in the target folder on your system, and can be run with:
-
-```sh
-target/debug/rustdesk
-```
-
-Or, if you're running a release executable:
-
-```sh
-target/release/rustdesk
-```
-
-Please ensure that you run these commands from the root of the RustDesk repository, or the application may not find the required resources. Also note that other cargo subcommands such as `install` or `run` are not currently supported via this method as they would install or run the program inside the container instead of the host.
-
-## File Structure
-
-- **[libs/hbb_common](https://github.com/rustdesk/rustdesk/tree/master/libs/hbb_common)**: video codec, config, tcp/udp wrapper, protobuf, fs functions for file transfer, and some other utility functions
-- **[libs/scrap](https://github.com/rustdesk/rustdesk/tree/master/libs/scrap)**: screen capture
-- **[libs/enigo](https://github.com/rustdesk/rustdesk/tree/master/libs/enigo)**: platform specific keyboard/mouse control
-- **[libs/clipboard](https://github.com/rustdesk/rustdesk/tree/master/libs/clipboard)**: file copy and paste implementation for Windows, Linux, macOS.
-- **[src/ui](https://github.com/rustdesk/rustdesk/tree/master/src/ui)**: obsolete Sciter UI (deprecated)
-- **[src/server](https://github.com/rustdesk/rustdesk/tree/master/src/server)**: audio/clipboard/input/video services, and network connections
-- **[src/client.rs](https://github.com/rustdesk/rustdesk/tree/master/src/client.rs)**: start a peer connection
-- **[src/rendezvous_mediator.rs](https://github.com/rustdesk/rustdesk/tree/master/src/rendezvous_mediator.rs)**: Communicate with [rustdesk-server](https://github.com/rustdesk/rustdesk-server), wait for remote direct (TCP hole punching) or relayed connection
-- **[src/platform](https://github.com/rustdesk/rustdesk/tree/master/src/platform)**: platform specific code
-- **[flutter](https://github.com/rustdesk/rustdesk/tree/master/flutter)**: Flutter code for desktop and mobile
-- **[flutter/web/js](https://github.com/rustdesk/rustdesk/tree/master/flutter/web/v1/js)**: JavaScript for Flutter web client
-
-## Screenshots
-
-![Connection Manager](https://github.com/rustdesk/rustdesk/assets/28412477/db82d4e7-c4bc-4823-8e6f-6af7eadf7651)
-
-![Connected to a Windows PC](https://github.com/rustdesk/rustdesk/assets/28412477/9baa91e9-3362-4d06-aa1a-7518edcbd7ea)
-
-![File Transfer](https://github.com/rustdesk/rustdesk/assets/28412477/39511ad3-aa9a-4f8c-8947-1cce286a46ad)
-
-![TCP Tunneling](https://github.com/rustdesk/rustdesk/assets/28412477/78e8708f-e87e-4570-8373-1360033ea6c5)
-
+GNU Affero General Public License v3.0. See [LICENCE](LICENCE).
+This program is a modified version of RustDesk. Copyright © RustDesk developers. Modifications © AZAD Co., Ltd.
+The original RustDesk README is kept at [docs/README-RustDesk.md](docs/README-RustDesk.md).
+"RustDesk" is a trademark of its owner; AZAD Quick Support is not affiliated with or endorsed by the RustDesk project.

@@ -26,6 +26,11 @@ import 'package:window_manager/window_manager.dart';
 import 'package:window_size/window_size.dart' as window_size;
 import '../widgets/button.dart';
 
+// AZAD QUICK SUPPORT の接続先とソースの公開先（接続先は src/azad.rs の SERVER と合わせる）
+const kAzadServer = "remote.azad.co.jp";
+const kAzadSourceUrl = "https://github.com/azad-co-jp/azad-quick-support";
+const kAzadServerSourceUrl = "https://github.com/azad-co-jp/azad-rustdesk-server";
+
 class DesktopHomePage extends StatefulWidget {
   const DesktopHomePage({Key? key}) : super(key: key);
 
@@ -197,6 +202,17 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                       ),
                       const SizedBox(height: 18),
                       _buildAzadSession(model),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "サポートのため、AZAD のサーバー（$kAzadServer）に接続します。",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 11, color: gray),
+                      ),
+                      TextButton(
+                        onPressed: () => _showAzadAbout(context),
+                        child: const Text("このソフトについて",
+                            style: TextStyle(fontSize: 12)),
+                      ),
                     ],
                   );
                 },
@@ -206,6 +222,75 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         ),
       ),
     ),
+    );
+  }
+
+  /// 「このソフトについて」。AGPL-3.0 の表示（改変したこと・無保証・ライセンス・ソースの入手先）と、
+  /// プライバシーの説明をまとめて載せる。メイン画面には接続先の1行だけを出す。
+  void _showAzadAbout(BuildContext context) {
+    const gray = Color(0xFF5F6B7A);
+    Widget heading(String t) => Padding(
+          padding: const EdgeInsets.only(top: 14, bottom: 4),
+          child: Text(t,
+              style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A2330))),
+        );
+    Widget body(String t) => SelectableText(t,
+        style: const TextStyle(fontSize: 13, height: 1.6, color: gray));
+    Widget link(String label, String url) => Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: InkWell(
+            onTap: () => launchUrl(Uri.parse(url)),
+            child: Text("$label：$url",
+                style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF1F5FBF),
+                    decoration: TextDecoration.underline)),
+          ),
+        );
+    showDialog(
+      context: context,
+      builder: (context) => Theme(
+        data: MyTheme.lightTheme,
+        child: AlertDialog(
+          title: const Text("このソフトについて"),
+          content: SizedBox(
+            width: 460,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  body("AZAD QUICK SUPPORT"),
+                  heading("ライセンス"),
+                  body("このソフトは、オープンソースの遠隔操作ソフト RustDesk（Copyright © RustDesk の開発者）を "
+                      "AZAD Co., Ltd. が改変したものです。"
+                      "GNU Affero General Public License v3.0（AGPL-3.0）のもとで配布しています。"
+                      "このソフトは無保証です。"),
+                  link("ライセンス全文", "https://www.gnu.org/licenses/agpl-3.0.html"),
+                  heading("ソースコード"),
+                  link("本体", kAzadSourceUrl),
+                  link("サーバー", kAzadServerSourceUrl),
+                  heading("プライバシー"),
+                  body("遠隔サポートのため、次の情報を AZAD のサーバー（$kAzadServer）に送ります："
+                      "このPCの接続ID、IPアドレス、接続した日時・時間・データ量。"
+                      "画面・キーボード・ファイルの内容は暗号化されたまま中継され、サーバーでは見られません。"
+                      "このPCにはログを残しません。"
+                      "接続しないようにするには、このソフトを終了してください。"),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("閉じる"),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

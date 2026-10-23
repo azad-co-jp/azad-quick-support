@@ -1,0 +1,121 @@
+# AZAD QUICK SUPPORT（Windows x64）のビルド。
+# GitHub がホストする環境だけでビルドする（SignPath Foundation の署名の条件）。
+# 版のタグ（v1.0.0 など）を push すると、ビルドしてリリースに exe を載せる。手動実行ではビルドだけ行う。
+# 版はこのPCでビルドを確認した組み合わせにそろえる（azad/build.ps1 と同じ）。
+name: AZAD Quick Support
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  RUST_VERSION: "1.97.1"
+  LLVM_VERSION: "20.1.8"
+  FLUTTER_VERSION: "3.27.4"
+  # .github/workflows/flutter-build.yml（RustDesk 1.4.9）と同じ vcpkg
+  VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
+  VCPKG_TRIPLET: "x64-windows-static"
+
+jobs:
+  generate-bridge:
+    uses: ./.github/workflows/bridge.yml
+
+  build-windows:
+    needs: generate-bridge
+    runs-on: windows-2022
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          submodules: recursive
+
+      - name: Restore bridge files
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: bridge-artifact
+          path: ./
+
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
+        with:
+          version: ${{ env.LLVM_VERSION }}
+
+      - name: Install flutter
+        uses: subosito/flutter-action@2783a3f08e1baf891508463f8c6653c258246225 # v2.12.0
+        with:
+          channel: "stable"
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          architecture: x64
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          targets: x86_64-pc-windows-msvc
+
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        with:
+          prefix-key: azad-windows
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@b1a0dd252f06b9e25b3c022a9a03bd7a427fb6a2 # v11
+        with:
+          vcpkgDirectory: C:\vcpkg
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+          doNotCache: false
+
+      - name: Install vcpkg dependencies
+        shell: bash
+        env:
+          VCPKG_DEFAULT_HOST_TRIPLET: ${{ env.VCPKG_TRIPLET }}
+        run: |
+          $VCPKG_ROOT/vcpkg install --triplet $VCPKG_TRIPLET --x-install-root="$VCPKG_ROOT/installed"
+
+      - name: Build librustdesk.dll
+        run: cargo build --locked --features flutter --lib --release
+
+      - name: Build flutter app
+        working-directory: flutter
+        run: |
+          flutter pub get --enforce-lockfile
+          flutter build windows --release
+
+      - name: Build portable exe
+        shell: pwsh
+        run: |
+          $release = "flutter\build\windows\x64\runner\Release"
+          Copy-Item target\release\deps\dylib_virtual_display.dll $release -Force
+          # 中の本体も azad_quick_support.exe にする（src/azad.rs の判定に使う）
+          $stage = "target\azad_portable_input"
+          Copy-Item $release $stage -Recurse
+          Rename-Item "$stage\rustdesk.exe" "azad_quick_support.exe"
+          # 署名（SignPath）を入れるときは、ここで $stage の exe と dll を署名してから詰める
+          Push-Location libs\portable
+          python -m pip install -r requirements.txt
+          python .\generate.py -f "..\..\$stage" -o . -e "..\..\$stage\azad_quick_support.exe"
+          cargo build --locked --release
+          Pop-Location
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item target\release\rustdesk-portable-packer.exe dist\azad_quick_support.exe
+          Get-FileHash dist\azad_quick_support.exe -Algorithm SHA256 | Format-List
+
+      - name: Upload exe
+        id: upload-unsigned
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: azad_quick_support
+          path: dist/azad_quick_support.exe
+
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/azad_quick_support.exe \
+            --title "AZAD Quick Support $GITHUB_REF_NAME" \
+            --notes "Windows 用のポータブル版です。ダウンロードしてそのまま起動してください。"
