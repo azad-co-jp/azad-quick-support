@@ -51,6 +51,8 @@ Free code signing provided by [SignPath.io](https://about.signpath.io), certific
 
 ## Privacy policy / プライバシーポリシー
 
+The same policy is also available at [PRIVACY.md](PRIVACY.md).
+
 This program connects to the AZAD server (`remote.azad.co.jp`, operated by AZAD Co., Ltd.) to provide remote support.
 The program will not transfer any information to other networked systems.
 
