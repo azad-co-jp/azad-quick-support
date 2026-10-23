@@ -267,8 +267,10 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                   heading("ライセンス"),
                   body("このソフトは、オープンソースの遠隔操作ソフト RustDesk（Copyright © RustDesk の開発者）を "
                       "AZAD Co., Ltd. が改変したものです。"
-                      "GNU Affero General Public License v3.0（AGPL-3.0）のもとで配布しています。"
-                      "このソフトは無保証です。"),
+                      "GNU Affero General Public License v3.0（AGPL-3.0）のもとで配布しており、"
+                      "このライセンスの条件に従って、誰でも複製・改変・再配布できます。"
+                      "このソフトは AGPL-3.0 に基づき無保証で提供されます"
+                      "（AZAD との保守契約で別に定める場合を除きます）。"),
                   link("ライセンス全文", "https://www.gnu.org/licenses/agpl-3.0.html"),
                   heading("ソースコード"),
                   link("本体", kAzadSourceUrl),
