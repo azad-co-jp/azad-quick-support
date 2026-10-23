@@ -225,7 +225,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     );
   }
 
-  /// 「このソフトについて」。AGPL-3.0 の表示（改変したこと・無保証・ライセンス・ソースの入手先）と、
+  /// 「このソフトについて」（英語で表示）。AGPL-3.0 の表示（改変したこと・無保証・ライセンス・ソースの入手先）と、
   /// プライバシーの説明をまとめて載せる。メイン画面には接続先の1行だけを出す。
   void _showAzadAbout(BuildContext context) {
     const gray = Color(0xFF5F6B7A);
@@ -243,7 +243,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           padding: const EdgeInsets.only(top: 2),
           child: InkWell(
             onTap: () => launchUrl(Uri.parse(url)),
-            child: Text("$label：$url",
+            child: Text("$label: $url",
                 style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xFF1F5FBF),
@@ -255,7 +255,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       builder: (context) => Theme(
         data: MyTheme.lightTheme,
         child: AlertDialog(
-          title: const Text("このソフトについて"),
+          title: const Text("About AZAD Quick Support"),
           content: SizedBox(
             width: 460,
             child: SingleChildScrollView(
@@ -264,23 +264,25 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   body("AZAD QUICK SUPPORT"),
-                  heading("ライセンス"),
-                  body("このソフトは、オープンソースの遠隔操作ソフト RustDesk（Copyright © RustDesk の開発者）を "
-                      "AZAD Co., Ltd. が改変したものです。"
-                      "GNU Affero General Public License v3.0（AGPL-3.0）のもとで配布しており、"
-                      "このライセンスの条件に従って、誰でも複製・改変・再配布できます。"
-                      "このソフトは AGPL-3.0 に基づき無保証で提供されます"
-                      "（AZAD との保守契約で別に定める場合を除きます）。"),
-                  link("ライセンス全文", "https://www.gnu.org/licenses/agpl-3.0.html"),
-                  heading("ソースコード"),
-                  link("本体", kAzadSourceUrl),
-                  link("サーバー", kAzadServerSourceUrl),
-                  heading("プライバシー"),
-                  body("遠隔サポートのため、次の情報を AZAD のサーバー（$kAzadServer）に送ります："
-                      "このPCの接続ID、IPアドレス、接続した日時・時間・データ量。"
-                      "画面・キーボード・ファイルの内容は暗号化されたまま中継され、サーバーでは見られません。"
-                      "このPCにはログを残しません。"
-                      "接続しないようにするには、このソフトを終了してください。"),
+                  heading("License"),
+                  body("This software is a modified version of RustDesk, an open source remote desktop software "
+                      "(Copyright © RustDesk developers), modified by AZAD Co., Ltd. "
+                      "It is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). "
+                      "Anyone may copy, modify and redistribute it under the terms of that license. "
+                      "This software is provided without warranty under the AGPL-3.0, "
+                      "except as separately agreed in a maintenance contract with AZAD Co., Ltd."),
+                  link("License text", "https://www.gnu.org/licenses/agpl-3.0.html"),
+                  heading("Source code"),
+                  link("Client", kAzadSourceUrl),
+                  link("Server", kAzadServerSourceUrl),
+                  heading("Privacy"),
+                  body("To provide remote support, this software sends the following information "
+                      "to the AZAD server ($kAzadServer): the connection ID of this PC, its IP address, "
+                      "and the date, time, duration and amount of data of each session. "
+                      "Screen, keyboard and file contents are relayed end-to-end encrypted "
+                      "and cannot be seen on the server. "
+                      "No log files are kept on this PC. "
+                      "To stop sending, close this software."),
                 ],
               ),
             ),
@@ -288,7 +290,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text("閉じる"),
+              child: const Text("Close"),
             ),
           ],
         ),
